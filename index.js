@@ -1,5 +1,7 @@
 const express = require('express');
 const { MongoClient, ServerApiVersion } = require('mongodb');
+const ObjectId = require('mongodb').ObjectId;
+
 const app = express();
 const cors = require('cors');
 const port = process.env.PORT || 5000;
@@ -18,9 +20,38 @@ async function run(){
     try{
         await client.connect();
         const userCollection = client.db("foodExpress").collection("user");
-        const user = {name:'Nodi', email:'nodi@gmail.com'};
-        const result = await userCollection.insertOne(user);
-        console.log(`User Inserted with ID: ${result.insertedId}`);
+
+        //Showing Data ================================
+        app.get('/user', async(req, res) =>{
+            const query = {};
+            const cursor = userCollection.find(query);
+            const users = await cursor.toArray();
+            res.send(users);
+        })
+
+        //Updating an User===============================
+        app.get('user/:id', async(req,res) =>{
+            const id = req.params.id;
+            const query = {_id:ObjectId(id)};
+            const result = await userCollection.findOne(query);
+            res.send(result);
+        })
+         //Delete an User================================
+        app.delete('/user/:id', async(req,res) =>{
+            const id = req.params.id;
+            const query = {_id: ObjectId(id)};
+            const result = await userCollection.deleteOne(query);
+            res.send(result);
+        })
+
+        //Add a new User===============================
+        app.post('/user', async(req,res) => {
+            const newUser = req.body;
+            console.log('New User Adding');
+            const result = await userCollection.insertOne(newUser);
+
+            res.send(result);
+        })
     }
     finally{
         // await client.close();
